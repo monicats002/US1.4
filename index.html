@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Seen — Report received.</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --teal: #0F4C53;
+  --teal-deep: #082F34;
+  --teal-light: rgba(15, 76, 83, 0.08);
+  --teal-border: rgba(15, 76, 83, 0.18);
+  --teal-mist: #ECF1F1;
+  /* Premium black ink — CTAs (same as screen 3) */
+  --ink-cta: #1C2026;
+  --ink-cta-deep: #0A0D12;
+  --bg-warm: #FAFAF7;
+  --bg-warmer: #F5F3EC;
+  --text-primary: #0A0908;
+  --text-dark: #3E3833;
+  --text-secondary: #5F5C53;
+  --text-tertiary: #6B6960;
+  --text-faint: #8F8C82;
+  --text-muted: #5F5C53;
+  --border-soft: #E8E6DD;
+  --border-softer: #F1EFE8;
+  --success: #16A34A;
+}
+
+/* Selection pulse — kept from screen 3 for consistency */
+@keyframes pickPulse {
+  0% { outline: 0 solid rgba(15, 76, 83, 0.28); outline-offset: 0; }
+  60% { outline: 2px solid rgba(15, 76, 83, 0.10); outline-offset: 4px; }
+  100% { outline: 2px solid rgba(15, 76, 83, 0); outline-offset: 6px; }
+}
+
+/* Check draw-in: stroke goes from invisible (offset = full length) to visible */
+@keyframes checkDraw {
+  0%   { stroke-dashoffset: 38; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Outer ring ripple — scales outward, fades */
+@keyframes ringRipple {
+  0%   { transform: scale(0.94); opacity: 0; }
+  18%  { opacity: 0.55; }
+  100% { transform: scale(1.28); opacity: 0; }
+}
+
+/* Check badge pop — subtle scale on load */
+@keyframes badgePop {
+  0%   { transform: scale(0.85); opacity: 0; }
+  60%  { transform: scale(1.04); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Heading slide-up */
+@keyframes slideUp {
+  0%   { transform: translateY(10px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Card fade-up — softer, slightly delayed */
+@keyframes cardRise {
+  0%   { transform: translateY(14px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+/* Reference shimmer on load — quick sheen across the number */
+@keyframes refShimmer {
+  0%   { background-position: -120% 0; }
+  100% { background-position: 220% 0; }
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 390px;
+  height: 792px;
+  overflow: hidden;
+}
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: transparent;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================================================
+   PHONE FRAME — identical to screen 3
+   ========================================================= */
+.phone-frame {
+  background: #0D0D0D;
+  border-radius: 58px;
+  padding: 6px;
+  width: 390px;
+  position: relative;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 0 2px rgba(0, 0, 0, 0.85);
+}
+.phone-frame::after {
+  content: '';
+  position: absolute;
+  right: -2.5px; top: 175px;
+  width: 3.5px; height: 80px;
+  background: linear-gradient(90deg, #1A1A1A, #2A2A2A);
+  border-radius: 0 2px 2px 0;
+}
+.phone-frame::before {
+  content: '';
+  position: absolute;
+  left: -2.5px; top: 195px;
+  width: 3.5px; height: 40px;
+  background: linear-gradient(270deg, #1A1A1A, #2A2A2A);
+  border-radius: 2px 0 0 2px;
+}
+.phone-screen {
+  background: var(--bg-warm);
+  border-radius: 52px;
+  overflow: hidden;
+  position: relative;
+  height: 780px;
+}
+.dynamic-island {
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 120px;
+  height: 35px;
+  background: #000;
+  border-radius: 20px;
+  z-index: 100;
+}
+
+/* =========================================================
+   PHONE CONTENT — sits inside screen, padded
+   ========================================================= */
+.phone-content {
+  height: calc(780px - 58px);
+  padding: 0 22px 24px;
+  position: relative;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  scrollbar-width: none;
+}
+.phone-content::-webkit-scrollbar { display: none; }
+
+/* =========================================================
+   STATUS BAR — same spec as screens 1/2/3
+   ========================================================= */
+.phone-statusbar {
+  height: 58px;
+  padding: 20px 32px 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.phone-statusbar-icons { display: flex; gap: 5px; align-items: center; }
+.phone-statusbar-signal {
+  display: flex;
+  align-items: flex-end;
+  gap: 1.5px;
+}
+.phone-statusbar-signal span {
+  width: 2.8px;
+  background: var(--text-primary);
+  border-radius: 0.5px;
+}
+.phone-statusbar-signal span:nth-child(1) { height: 4px; }
+.phone-statusbar-signal span:nth-child(2) { height: 6px; }
+.phone-statusbar-signal span:nth-child(3) { height: 8px; }
+.phone-statusbar-signal span:nth-child(4) { height: 10px; }
+.phone-statusbar-battery {
+  width: 24px; height: 12px;
+  border: 1.3px solid var(--text-primary);
+  border-radius: 3px;
+  padding: 1px;
+  position: relative;
+}
+.phone-statusbar-battery::after {
+  content: '';
+  position: absolute;
+  right: -3px; top: 3px;
+  width: 1.5px; height: 4px;
+  background: var(--text-primary);
+  border-radius: 0 1px 1px 0;
+}
+.phone-statusbar-battery-fill {
+  background: var(--text-primary);
+  height: 100%;
+  border-radius: 1px;
+  width: 80%;
+}
+
+/* =========================================================
+   BRAND WORDMARK — SEEN / REPORT
+   ========================================================= */
+.wordmark-row {
+  margin-top: 24px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.wordmark-brand {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 1.2px;
+}
+.wordmark-section {
+  font-size: 10px;
+  font-weight: 700;
+  color: #A8A598;
+  letter-spacing: 0.4px;
+}
+
+/* =========================================================
+   CHECK BADGE — circular teal with double ring
+   ========================================================= */
+.check-section {
+  margin-top: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.check-badge-wrap {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: badgePop 0.55s cubic-bezier(0.34, 1.45, 0.64, 1) 0.15s both;
+}
+.check-badge {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(15, 76, 83, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+/* Outer ring — static at rest, with a ripple guest layer */
+.check-badge-ring {
+  position: absolute;
+  inset: 0;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid var(--teal);
+  opacity: 0.30;
+  z-index: 1;
+  pointer-events: none;
+}
+/* Ripple layer — independently scales outward and fades, fires once on load */
+.check-badge-ripple {
+  position: absolute;
+  inset: 0;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2px solid var(--teal);
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  transform-origin: center;
+  animation: ringRipple 1.4s cubic-bezier(0.22, 0.61, 0.36, 1) 0.5s 1 both;
+}
+.check-svg {
+  width: 36px;
+  height: 36px;
+}
+.check-svg path {
+  stroke-dasharray: 38;
+  stroke-dashoffset: 38;
+  animation: checkDraw 0.55s cubic-bezier(0.65, 0, 0.35, 1) 0.5s forwards;
+}
+
+.received-heading {
+  margin-top: 13px;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.5px;
+  text-align: center;
+  line-height: 1.15;
+  animation: slideUp 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) 0.7s both;
+}
+
+/* =========================================================
+   REFERENCE ROW
+   ========================================================= */
+.reference-row {
+  margin-top: 24px;
+  padding: 8px 12px;
+  background: rgba(86, 102, 104, 0.06);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  animation: cardRise 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) 0.9s both;
+}
+.reference-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #A8A598;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  flex-shrink: 0;
+}
+.reference-value-wrap {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+.reference-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.5px;
+  position: relative;
+  background: linear-gradient(90deg, transparent 0%, transparent 40%, rgba(15, 76, 83, 0.18) 50%, transparent 60%, transparent 100%);
+  background-size: 200% 100%;
+  background-position: -120% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: refShimmer 1.4s ease 1.4s 1;
+}
+.reference-eta {
+  padding: 3px 7px;
+  background: rgba(15, 76, 83, 0.10);
+  border-radius: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--teal);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   SUMMARY CARD
+   ========================================================= */
+.summary-card {
+  margin-top: 18px;
+  padding: 14px;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow:
+    0 2px 8px rgba(10, 9, 8, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  animation: cardRise 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) 1.05s both;
+}
+.summary-card-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  color: #A8A598;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.summary-card-issue {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-softer);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.summary-card-icon {
+  width: 32px;
+  height: 32px;
+  background: var(--teal-mist);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.summary-card-issue-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.summary-card-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+  line-height: 1.25;
+}
+.summary-card-sub {
+  font-size: 12px;
+  font-weight: 400;
+  color: #838074;
+  line-height: 1.35;
+}
+.summary-card-status {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.status-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.status-check {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--success);
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+}
+.status-text {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.35;
+}
+
+/* =========================================================
+   TRACK THIS REPORT CTA — ink-black, same as screen 3 Submit
+   ========================================================= */
+.track-wrap {
+  margin-top: auto;
+  padding-top: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  animation: cardRise 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) 1.2s both;
+}
+.track-btn {
+  width: 100%;
+  height: 54px;
+  padding: 16px;
+  background: linear-gradient(180deg, var(--ink-cta) 0%, var(--ink-cta-deep) 100%);
+  border: none;
+  border-radius: 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 5px 14px rgba(10, 13, 18, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  transition: transform 0.22s cubic-bezier(0.34, 1.40, 0.64, 1), box-shadow 0.28s ease;
+}
+.track-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.10) 0%, transparent 50%);
+  pointer-events: none;
+  border-radius: 14px;
+}
+.track-btn:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 7px 18px rgba(10, 13, 18, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.track-btn:active,
+.track-btn.is-auto-pressed {
+  transform: scale(0.985);
+  box-shadow:
+    0 3px 8px rgba(10, 13, 18, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+.track-btn-label,
+.track-btn-arrow {
+  position: relative;
+  z-index: 1;
+}
+.track-btn-arrow {
+  display: inline-flex;
+  align-items: center;
+  transition: transform 0.28s cubic-bezier(0.34, 1.40, 0.64, 1);
+}
+.track-btn:hover .track-btn-arrow {
+  transform: translateX(3px);
+}
+
+/* Secondary action — "Report another issue" */
+.secondary-link {
+  background: none;
+  border: none;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 8px;
+  transition: color 0.22s ease, background 0.22s ease;
+}
+.secondary-link:hover {
+  color: var(--text-primary);
+  background: rgba(10, 9, 8, 0.04);
+}
+
+/* =========================================================
+   AUTO-TAP INDICATOR — same frosted-glass spec as screens 2/3
+   ========================================================= */
+.auto-tap-indicator {
+  position: absolute;
+  top: 0; left: 0;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow:
+    0 4px 14px rgba(10, 9, 8, 0.10),
+    0 0 0 1px rgba(15, 76, 83, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.9s cubic-bezier(0.22, 0.61, 0.36, 1), top 0.9s cubic-bezier(0.22, 0.61, 0.36, 1), left 0.9s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.auto-tap-indicator::after {
+  content: '';
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--teal);
+  opacity: 0.85;
+}
+.auto-tap-indicator.is-visible { opacity: 1; }
+.auto-tap-indicator.is-pressing {
+  transform: scale(0.82);
+}
+/* Tap ripple */
+.auto-tap-indicator.is-pressing::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(15, 76, 83, 0.4);
+  animation: tapRipple 0.5s ease-out;
+}
+@keyframes tapRipple {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="phone-screen">
+    <div class="dynamic-island"></div>
+
+    <!-- STATUS BAR — sibling of phone-content, matching screens 1/2/3 -->
+    <div class="phone-statusbar">
+      <span>9:41</span>
+      <div class="phone-statusbar-icons">
+        <div class="phone-statusbar-signal"><span></span><span></span><span></span><span></span></div>
+        <svg width="14" height="11" viewBox="0 0 14 11" fill="none">
+          <path d="M7 1.5C9 1.5 11 2.5 12.5 4M7 4.5C8 4.5 9 5 9.5 5.5M7 8.5L7 8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+        </svg>
+        <div class="phone-statusbar-battery"><div class="phone-statusbar-battery-fill"></div></div>
+      </div>
+    </div>
+
+    <div class="phone-content" id="phoneContent">
+
+      <!-- Auto-tap indicator -->
+      <div class="auto-tap-indicator" id="autoTapIndicator"></div>
+
+      <!-- BRAND WORDMARK -->
+      <div class="wordmark-row">
+        <div class="wordmark-brand">SEEN</div>
+        <div class="wordmark-section">REPORT</div>
+      </div>
+
+      <!-- CHECK BADGE -->
+      <div class="check-section">
+        <div class="check-badge-wrap">
+          <div class="check-badge-ring"></div>
+          <div class="check-badge-ripple"></div>
+          <div class="check-badge">
+            <svg class="check-svg" width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M7.5 18L15 25.5L28.5 12" stroke="#0F4C53" stroke-width="3.75" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <h1 class="received-heading">Report received.</h1>
+      </div>
+
+      <!-- REFERENCE ROW -->
+      <div class="reference-row">
+        <div class="reference-label">Reference</div>
+        <div class="reference-value-wrap">
+          <div class="reference-value">SN-K8M2P4</div>
+        </div>
+        <div class="reference-eta">~12 min</div>
+      </div>
+
+      <!-- SUMMARY CARD -->
+      <div class="summary-card">
+        <div class="summary-card-eyebrow">Report summary</div>
+
+        <div class="summary-card-issue">
+          <div class="summary-card-icon">
+            <!-- Spray bottle cleanliness icon (from Figma) -->
+            <svg width="22" height="22" viewBox="37 373 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M47.5264 386.053H52.579V396.158C52.579 396.623 52.202 397 51.7369 397H48.3685C47.9034 397 47.5264 396.623 47.5264 396.158V386.053Z" stroke="#0F4C53" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M48.3684 386.052V383.526H51.7368V386.052" stroke="#0F4C53" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M51.7368 383.526L55.1052 382.684" stroke="#0F4C53" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M55.9475 381.842L56.7896 381" stroke="#0F4C53" stroke-width="1.18" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M57.6316 382.684L58.4737 381.842" stroke="#0F4C53" stroke-width="1.18" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M57.2104 384.368H58.0526" stroke="#0F4C53" stroke-width="1.18" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="summary-card-issue-text">
+            <div class="summary-card-title">Cleanliness · Unclean Berth</div>
+            <div class="summary-card-sub">Coach S4 · Berth 31 · Train 18519</div>
+          </div>
+        </div>
+
+        <div class="summary-card-status">
+          <div class="status-row">
+            <span class="status-check">✓</span>
+            <span class="status-text">Routed to OBHS</span>
+          </div>
+          <div class="status-row">
+            <span class="status-check">✓</span>
+            <span class="status-text">You'll get SMS updates on this number</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- TRACK BUTTON + SECONDARY LINK -->
+      <div class="track-wrap">
+        <button class="track-btn" id="trackBtn" aria-label="Track this report">
+          <span class="track-btn-label">Track this report</span>
+          <span class="track-btn-arrow">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+        <button class="secondary-link">Report another issue</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const indicator = document.getElementById('autoTapIndicator');
+  const trackBtn = document.getElementById('trackBtn');
+  const content = document.getElementById('phoneContent');
+
+  if (!indicator || !trackBtn || !content) return;
+
+  // Position helper — pixel coords relative to phone-content
+  function center(el) {
+    const cBox = content.getBoundingClientRect();
+    const eBox = el.getBoundingClientRect();
+    return {
+      x: eBox.left - cBox.left + eBox.width / 2 - 19,
+      y: eBox.top  - cBox.top  + eBox.height / 2 - 19
+    };
+  }
+
+  // The choreographed loop
+  function runLoop() {
+    // Start position: top-right corner of phone-content
+    indicator.style.top = '40px';
+    indicator.style.left = (390 - 22 - 22 - 38 - 8) + 'px';
+
+    // Wait 2.5s — let the check + heading + card animate in
+    setTimeout(() => {
+      indicator.classList.add('is-visible');
+
+      // Hold position 800ms so the user notices it
+      setTimeout(() => {
+        // Move to Track button center
+        const target = center(trackBtn);
+        indicator.style.top = target.y + 'px';
+        indicator.style.left = target.x + 'px';
+
+        // After it arrives, press
+        setTimeout(() => {
+          indicator.classList.add('is-pressing');
+          trackBtn.classList.add('is-auto-pressed');
+
+          setTimeout(() => {
+            indicator.classList.remove('is-pressing');
+            trackBtn.classList.remove('is-auto-pressed');
+
+            // Fade out and reset
+            setTimeout(() => {
+              indicator.classList.remove('is-visible');
+              setTimeout(runLoop, 1200);
+            }, 600);
+          }, 380);
+        }, 950);
+      }, 800);
+    }, 2500);
+  }
+
+  // Start loop after page settles
+  window.addEventListener('load', () => {
+    setTimeout(runLoop, 200);
+  });
+})();
+</script>
+
+</body>
+</html>
